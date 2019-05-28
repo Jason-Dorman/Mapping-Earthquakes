@@ -115,8 +115,44 @@ var circles = {
 // perform API call
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"), function(data) {
 
-    // create a
+    var buckets;
 
-}
+    // loop through the data
+    for (var i = 0; i < data.length; i++) {
+
+        var magnitude = data[i].mag;
+
+        if (magnitude < 1) {
+            buckets = "Bucket_1";
+        }
+
+        else if (magnitude > 1 && magnitude < 2) {
+            buckets = "Bucket_2";
+        }
+
+        else if (magnitude > 2 && magnitude < 3) {
+            buckets = "Bucket_3";
+        }
+
+        else if (magnitude > 3 && magnitude < 4) {
+            buckets = "Bucket_4";
+        }
+
+        else if (magnitude > 4 && magnitude < 5) {
+            buckets = "Bucket_5";
+        }
+
+        else {
+            buckets = "Bucket_6"
+        }
+
+        circles.addLayer(L.circleMarker([data.coordinates[1], data.coordinates[0]]));
+
+        // bind a popup
+        circles.bindPopup(data.place + "<br> Magnitude: " + data.mag);
+    }    
+};
+
+
 
 
