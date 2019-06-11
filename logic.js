@@ -1,158 +1,172 @@
-// Create the tile layer that will be the background of our map
-var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token={accessToken}", {
-  attribution: "Map data &copy; <a href=\"http://openstreetmap.org\">OpenStreetMap</a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"http://mapbox.com\">Mapbox</a>",
+// create tilelayers
+
+var apiKey = "pk.eyJ1IjoiamRvcm1hbjE1IiwiYSI6ImNqdm9rMWE0NjFqNWY0YXFqZzc2dHVvc2gifQ.CDk2-53LDNu3DwaBuwZzUg";
+
+var graymap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
   maxZoom: 18,
   id: "mapbox.light",
-  accessToken: API_KEY
+  accessToken: apiKey
 });
 
-// initialize layergroups
-var layers = {
-    Bucket_1: new L.LayerGroup(),
-    Bucket_2: new L.LayerGroup(),
-    Bucket_3: new L.LayerGroup(),
-    Bucket_4: new L.LayerGroup(),
-    Bucket_5: new L.LayerGroup(),
-    Bucket_6: new L.LayerGroup(),
+var satellitemap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.streets-satellite",
+  accessToken: apiKey
+});
+
+var outdoors = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.outdoors",
+  accessToken: apiKey
+});
+
+// create map object
+var map = L.map("mapid", {
+  center: [
+    40.7, -94.5
+  ],
+  zoom: 3,
+  layers: [graymap, satellitemap, outdoors]
+});
+
+// Adding 'graymap' tile layer to the map.
+graymap.addTo(map);
+
+// create the layers for two different sets of data [earthquakes and tectonicplates]
+
+var tectonicplates = new L.LayerGroup();
+var earthquakes = new L.LayerGroup();
+
+// object that contains all map choices
+var baseMaps = {
+  Satellite: satellitemap,
+  Grayscale: graymap,
+  Outdoors: outdoors
 };
 
-// create map
-var map = L.map("map-id", {
-    center: [37.0902, -95.7129],
-    zoom: 4,
-    layers: [
-        layers.Bucket_1,
-        layers.Bucket_2,
-        layers.Bucket_3,
-        layers.Bucket_4,
-        layers.Bucket_5,
-        layers.Bucket_6
-    ]
-});
-
-// add lightmap tile layer
-lightmap.addTo(map);
-
-// create overlays onbject to add to layer controls
+// define an object that contains all overlays
 var overlays = {
-    "0-1": layers.Bucket_1,
-    "1-2": layers.Bucket_2,
-    "2-3": layers.Bucket_3,
-    "3-4": layers.Bucket_4,
-    "4-5": layers.Bucket_5,
-    "5 +": layers.Bucket_6
+  "Tectonic Plates": tectonicplates,
+  Earthquakes: earthquakes
 };
 
-// create control for layers and add overlays to it
-L.control.layers(null, overlays).addTo(map);
+// add a control to the map that will allow the user to change layers
+L
+  .control
+  .layers(baseMaps, overlays)
+  .addTo(map);
 
-//create legend
-var info = L.control({
+// get the USGIS earthquake data for last seven days
+d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson", function(data) {
+
+  // return the style data for each earthquake.
+  // pass the magnitude of the earthquake into two separate functions
+  // to calculate the color and radius
+  function styleInfo(feature) {
+    return {
+      opacity: 1,
+      fillOpacity: 1,
+      fillColor: getColor(feature.properties.mag),
+      color: "#000000",
+      radius: getRadius(feature.properties.mag),
+      stroke: true,
+      weight: 0.5
+    };
+  }
+
+  // Determines the color of the marker based on the magnitude of the earthquake.
+  function getColor(magnitude) {
+    switch (true) {
+    case magnitude > 5:
+      return "#ea2c2c";
+    case magnitude > 4:
+      return "#ea822c";
+    case magnitude > 3:
+      return "#ee9c00";
+    case magnitude > 2:
+      return "#eecc00";
+    case magnitude > 1:
+      return "#d4ee00";
+    default:
+      return "#98ee00";
+    }
+  }
+
+  // function for the radius of the earthquake marker based on its magnitude.
+  function getRadius(magnitude) {
+    if (magnitude === 0) {
+      return 1;
+    }
+
+    return magnitude * 4;
+  }
+
+  // add a GeoJSON layer to the map once the file is loaded.
+  L.geoJson(data, {
+    // turn each feature into a circleMarker on the map.
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng);
+    },
+    // set the style for each circleMarker using styleInfo function.
+    style: styleInfo,
+    // create a popup for each marker to display the magnitude and location of
+    // the earthquake after the marker has been created and styled
+    onEachFeature: function(feature, layer) {
+      layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
+    }
+    // add the data to the earthquake layer instead of directly to the map.
+  }).addTo(earthquakes);
+
+  // add the earthquake layer to map.
+  earthquakes.addTo(map);
+
+  // create a legend control object.
+  var legend = L.control({
     position: "bottomright"
-});
+  });
 
-// when layer control is added - insert div with class "legend"
-info.onAdd = function() {
-    var div = L.DomUtil.create("div", "legend")
+  // add all the details for our legend
+  legend.onAdd = function() {
+    var div = L
+      .DomUtil
+      .create("div", "info legend");
+
+    var grades = [0, 1, 2, 3, 4, 5];
+    var colors = [
+      "#98ee00",
+      "#d4ee00",
+      "#eecc00",
+      "#ee9c00",
+      "#ea822c",
+      "#ea2c2c"
+    ];
+
+    // Loop through intervals and generate a label with a colored square for each interval.
+    for (var i = 0; i < grades.length; i++) {
+      div.innerHTML += "<i style='background: " + colors[i] + "'></i> " +
+        grades[i] + (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
+    }
     return div;
-};
+  };
 
-// add the info legend to the map
-info.addTo(map);
+  // add legend to the map.
+  legend.addTo(map);
 
-// Initialize an object to create circles for each layer
-var circles = {
-    Bucket_1: L.circleMarker({
-        radius: 8,
-        fillColor: "#9ACD32",
-        color: "black",
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.8
-    }),
-    Bucket_2: L.circleMarker({
-        radius: 8,
-        fillColor: "#EEF102",
-        color: "black",
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.8
-    }),
-    Bucket_3: L.circleMarker({
-        radius: 8,
-        fillColor: "#ffd700",
-        color: "black",
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.8
-    }),
-    Bucket_4: L.circleMarker({
-        radius: 8,
-        fillColor: "#eeb422",
-        color: "black",
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.8
-    }),
-    Bucket_5: L.circleMarker({
-        radius: 8,
-        fillColor: "#ee9a00",
-        color: "black",
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.8
-    }),
-    Bucket_6: L.circleMarker({
-        radius: 8,
-        fillColor: "#ee4000",
-        color: "black",
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.8
-    }),
-};
+  // get the Tectonic Plate data.
+  d3.json("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json",
+    function(platedata) {
+      // Adding geoJSON data, along with style information, to the tectonicplates
+      // layer.
+      L.geoJson(platedata, {
+        color: "orange",
+        weight: 2
+      })
+      .addTo(tectonicplates);
 
-// perform API call
-d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"), function(data) {
-
-    var buckets;
-
-    // loop through the data
-    for (var i = 0; i < data.length; i++) {
-
-        var magnitude = data[i].mag;
-
-        if (magnitude < 1) {
-            buckets = "Bucket_1";
-        }
-
-        else if (magnitude > 1 && magnitude < 2) {
-            buckets = "Bucket_2";
-        }
-
-        else if (magnitude > 2 && magnitude < 3) {
-            buckets = "Bucket_3";
-        }
-
-        else if (magnitude > 3 && magnitude < 4) {
-            buckets = "Bucket_4";
-        }
-
-        else if (magnitude > 4 && magnitude < 5) {
-            buckets = "Bucket_5";
-        }
-
-        else {
-            buckets = "Bucket_6"
-        }
-
-        circles.addLayer(L.circleMarker([data.coordinates[1], data.coordinates[0]]));
-
-        // bind a popup
-        circles.bindPopup(data.place + "<br> Magnitude: " + data.mag);
-    }    
-};
-
-
-
-
+      // add the tectonicplates layer to the map.
+      tectonicplates.addTo(map);
+    });
+});
