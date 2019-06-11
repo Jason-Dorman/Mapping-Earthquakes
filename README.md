@@ -1,2 +1,2 @@
 # Mapping-Earthquakes
-Earthquake data from USGS mapped using d3.js
+This project pulls USGS earthquake data for the last seven days that is updated every minute. It features three different basemap layers the user can choose from and plots each earthquake marker with a corresponding size and color depending on the magnitude of the quake. It also allows the user to toggle on/off tectonic plates to see where quakes happen in relation to fault lines. A popup also provides information about the location and magnitude of each earthquake.
