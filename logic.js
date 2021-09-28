@@ -1,27 +1,29 @@
 // create tilelayers
 
-var apiKey = "pk.eyJ1IjoiamRvcm1hbjE1IiwiYSI6ImNqdm9rMWE0NjFqNWY0YXFqZzc2dHVvc2gifQ.CDk2-53LDNu3DwaBuwZzUg";
+var apiKey = "pk.eyJ1IjoiamRvcm1hbjE1IiwiYSI6ImNrdTQ1MDN2dTRuZmIyd3BxcDYxZjJrbWIifQ.JKNZcQO5HHyCD3XULGTQtw";
 
-var graymap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
-  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+var darkmap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+  attribution:  '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
+  tileSize: 512,
   maxZoom: 18,
-  id: "mapbox.light",
+  zoomOffset: -1,
+  id: "mapbox/dark-v10",
   accessToken: apiKey
 });
 
-var satellitemap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
-  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
-  maxZoom: 18,
-  id: "mapbox.streets-satellite",
-  accessToken: apiKey
-});
+// var satellitemap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+//   attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+//   maxZoom: 18,
+//   id: "mapbox.streets-satellite",
+//   accessToken: apiKey
+// });
 
-var outdoors = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
-  attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
-  maxZoom: 18,
-  id: "mapbox.outdoors",
-  accessToken: apiKey
-});
+// var outdoors = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+//   attribution: "Map data &copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors, <a href='https://creativecommons.org/licenses/by-sa/2.0/'>CC-BY-SA</a>, Imagery © <a href='https://www.mapbox.com/'>Mapbox</a>",
+//   maxZoom: 18,
+//   id: "mapbox.outdoors",
+//   accessToken: apiKey
+// });
 
 // create map object
 var map = L.map("mapid", {
@@ -29,11 +31,11 @@ var map = L.map("mapid", {
     40.7, -94.5
   ],
   zoom: 3,
-  layers: [graymap, satellitemap, outdoors]
+  layers: [darkmap] //satellitemap, outdoors]
 });
 
 // Adding 'graymap' tile layer to the map.
-graymap.addTo(map);
+darkmap.addTo(map);
 
 // create the layers for two different sets of data [earthquakes and tectonicplates]
 
@@ -42,9 +44,9 @@ var earthquakes = new L.LayerGroup();
 
 // object that contains all map choices
 var baseMaps = {
-  Satellite: satellitemap,
-  Grayscale: graymap,
-  Outdoors: outdoors
+  // Satellite: satellitemap,
+  Dark: darkmap
+  // Outdoors: outdoors
 };
 
 // define an object that contains all overlays
